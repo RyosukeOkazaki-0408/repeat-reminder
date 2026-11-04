@@ -91,7 +91,7 @@ struct ReminderDatabase: Codable, Equatable {
     var reminders: [Reminder] = []
     var revisions: [ScheduleRevision] = []
     var occurrences: [Occurrence] = []
-    var theme: ReminderTheme = .blue
+    var theme: ReminderTheme = .pink
     var cancellations: Set<UUID> = []
     mutating func materialize(through now: Date) {
         var known = Set(occurrences.map(\.id))

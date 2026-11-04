@@ -48,8 +48,8 @@ struct RootView: View {
     }
     private func updateAppIcon(for theme: ReminderTheme) {
         let iconName: String? = switch theme {
-        case .blue: nil
-        case .pink: "AppIcon-Pink"
+        case .pink: nil
+        case .blue: "AppIcon-Blue"
         case .green: "AppIcon-Green"
         case .yellow: "AppIcon-Yellow"
         }
