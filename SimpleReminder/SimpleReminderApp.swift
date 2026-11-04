@@ -46,6 +46,21 @@ struct RootView: View {
         }
         .onChange(of: phase) { _, phase in if phase == .active { Task { await store.recover() } } }
     }
+    private func updateAppIcon(for theme: ReminderTheme) {
+        let iconName: String? = switch theme {
+        case .blue: nil
+        case .pink: "AppIcon-Pink"
+        case .green: "AppIcon-Green"
+        case .yellow: "AppIcon-Yellow"
+        }
+        let application = UIApplication.shared
+        guard application.supportsAlternateIcons, application.alternateIconName != iconName else { return }
+        Task {
+            do { try await application.setAlternateIconName(iconName) }
+            catch { store.errorMessage = "ホーム画面のアイコンを変更できませんでした。同じテーマを選び直すと再試行できます。" }
+        }
+    }
+
     private var reminderContent: some View {
         ZStack {
             Group {
@@ -68,7 +83,11 @@ struct RootView: View {
                 VStack(spacing: 18) {
                     HStack { Text("カラーテーマ").font(.headline); Spacer(); Button("閉じる") { showingTheme = false } }
                     ForEach(ReminderTheme.allCases) { theme in
-                        Button { store.setTheme(theme); showingTheme = false } label: {
+                        Button {
+                            store.setTheme(theme)
+                            showingTheme = false
+                            if store.theme == theme { updateAppIcon(for: theme) }
+                        } label: {
                             HStack {
                                 Circle().fill(theme.color).frame(width: 26, height: 26)
                                 Text(theme.title).foregroundStyle(.primary)
