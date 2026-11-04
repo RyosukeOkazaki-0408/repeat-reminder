@@ -3,7 +3,7 @@
 <plist version="1.0"><dict>
 <key>NSAlarmKitUsageDescription</key><string>予定の時刻と、完了するまでの再通知にアラームを使用します。</string>
 <key>CFBundleDisplayName</key><string>シンプルリマインダー</string>
-<key>CFBundleShortVersionString</key><string>1.0</string>
-<key>CFBundleVersion</key><string>1</string>
+<key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
+<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
 <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
 </dict></plist>
