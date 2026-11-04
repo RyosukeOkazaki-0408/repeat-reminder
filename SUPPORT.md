@@ -6,7 +6,7 @@
 
 メールでのお問い合わせは [kamome0423@gmail.com](mailto:kamome0423@gmail.com) までお願いします。
 
-不具合や使い方の質問は、[GitHubで問い合わせを作成](https://github.com/RyosukeOkazaki-0408/Simple_reminder/issues/new)してください。投稿にはGitHubアカウントが必要です。[過去の問い合わせ](https://github.com/RyosukeOkazaki-0408/Simple_reminder/issues)も確認できます。
+不具合や使い方の質問は、[GitHubで問い合わせを作成](https://github.com/RyosukeOkazaki-0408/repeat-reminder/issues/new)してください。投稿にはGitHubアカウントが必要です。[過去の問い合わせ](https://github.com/RyosukeOkazaki-0408/repeat-reminder/issues)も確認できます。
 
 不具合の場合は、iPhoneの機種、iOSのバージョン、アプリのバージョン、問題が起きるまでの操作をお知らせください。投稿は公開されるため、氏名やメールアドレス、リマインダーに登録した個人的な情報は記載しないでください。
 
