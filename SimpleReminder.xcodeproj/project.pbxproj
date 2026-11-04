@@ -1,22 +1,191 @@
 // !$*UTF8*$!
-{archiveVersion = 1; classes = {}; objectVersion = 56; objects = {
-000000000000000000000001 = {isa = PBXProject; attributes = {LastUpgradeCheck = 2600;}; buildConfigurationList = 000000000000000000000002; compatibilityVersion = "Xcode 14.0"; developmentRegion = ja; knownRegions = (ja, en, Base); mainGroup = 000000000000000000000003; productRefGroup = 000000000000000000000004; projectDirPath = ""; targets = (000000000000000000000005);};
-000000000000000000000002 = {isa = XCConfigurationList; buildConfigurations = (000000000000000000000006, 000000000000000000000010); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
-000000000000000000000003 = {isa = PBXGroup; children = (000000000000000000000014, 000000000000000000000015, 000000000000000000000016, 000000000000000000000004); sourceTree = "<group>";};
-000000000000000000000004 = {isa = PBXGroup; children = (000000000000000000000008); name = Products; sourceTree = "<group>";};
-000000000000000000000005 = {isa = PBXNativeTarget; buildConfigurationList = 000000000000000000000009; buildPhases = (00000000000000000000000A, 00000000000000000000000B); buildRules = (); dependencies = (); name = SimpleReminder; productName = SimpleReminder; productReference = 000000000000000000000008; productType = "com.apple.product-type.application";};
-000000000000000000000006 = {isa = XCBuildConfiguration; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 26.0; ALWAYS_SEARCH_USER_PATHS = NO;}; name = Debug;};
-000000000000000000000010 = {isa = XCBuildConfiguration; buildSettings = {SDKROOT = iphoneos; IPHONEOS_DEPLOYMENT_TARGET = 26.0; ALWAYS_SEARCH_USER_PATHS = NO;}; name = Release;};
-000000000000000000000008 = {isa = PBXFileReference; explicitFileType = wrapper.application; path = SimpleReminder.app; sourceTree = BUILT_PRODUCTS_DIR;};
-000000000000000000000009 = {isa = XCConfigurationList; buildConfigurations = (00000000000000000000000C, 000000000000000000000011); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
-00000000000000000000000A = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (00000000000000000000001E, 00000000000000000000001F, 000000000000000000000020); runOnlyForDeploymentPostprocessing = 0;};
-00000000000000000000000B = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;};
-00000000000000000000000C = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = "com.example.SimpleReminder"; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SimpleReminder/Info.plist; INFOPLIST_KEY_UILaunchScreen_Generation = YES; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; CODE_SIGN_STYLE = Automatic; SWIFT_OPTIMIZATION_LEVEL = "-Onone";}; name = Debug;};
-000000000000000000000011 = {isa = XCBuildConfiguration; buildSettings = {PRODUCT_BUNDLE_IDENTIFIER = "com.example.SimpleReminder"; PRODUCT_NAME = "$(TARGET_NAME)"; GENERATE_INFOPLIST_FILE = YES; INFOPLIST_FILE = SimpleReminder/Info.plist; INFOPLIST_KEY_UILaunchScreen_Generation = YES; INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; CODE_SIGN_STYLE = Automatic; SWIFT_OPTIMIZATION_LEVEL = "-O";}; name = Release;};
-000000000000000000000014 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SimpleReminder/Domain.swift"; sourceTree = "<group>";};
-00000000000000000000001E = {isa = PBXBuildFile; fileRef = 000000000000000000000014;};
-000000000000000000000015 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SimpleReminder/ReminderStore.swift"; sourceTree = "<group>";};
-00000000000000000000001F = {isa = PBXBuildFile; fileRef = 000000000000000000000015;};
-000000000000000000000016 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "SimpleReminder/SimpleReminderApp.swift"; sourceTree = "<group>";};
-000000000000000000000020 = {isa = PBXBuildFile; fileRef = 000000000000000000000016;};
-}; rootObject = 000000000000000000000001;}
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00000000000000000000001E /* SimpleReminder/Domain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000014 /* SimpleReminder/Domain.swift */; };
+		00000000000000000000001F /* SimpleReminder/ReminderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000015 /* SimpleReminder/ReminderStore.swift */; };
+		000000000000000000000020 /* SimpleReminder/SimpleReminderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000016 /* SimpleReminder/SimpleReminderApp.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		000000000000000000000008 /* SimpleReminder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = SimpleReminder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000014 /* SimpleReminder/Domain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleReminder/Domain.swift; sourceTree = "<group>"; };
+		000000000000000000000015 /* SimpleReminder/ReminderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleReminder/ReminderStore.swift; sourceTree = "<group>"; };
+		000000000000000000000016 /* SimpleReminder/SimpleReminderApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleReminder/SimpleReminderApp.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		00000000000000000000000B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		000000000000000000000003 = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000014 /* SimpleReminder/Domain.swift */,
+				000000000000000000000015 /* SimpleReminder/ReminderStore.swift */,
+				000000000000000000000016 /* SimpleReminder/SimpleReminderApp.swift */,
+				000000000000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		000000000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000008 /* SimpleReminder.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		000000000000000000000005 /* SimpleReminder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000009 /* Build configuration list for PBXNativeTarget "SimpleReminder" */;
+			buildPhases = (
+				00000000000000000000000A /* Sources */,
+				00000000000000000000000B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SimpleReminder;
+			productName = SimpleReminder;
+			productReference = 000000000000000000000008 /* SimpleReminder.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 2600;
+			};
+			buildConfigurationList = 000000000000000000000002 /* Build configuration list for PBXProject "SimpleReminder" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = ja;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				ja,
+				en,
+				Base,
+			);
+			mainGroup = 000000000000000000000003;
+			productRefGroup = 000000000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				000000000000000000000005 /* SimpleReminder */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		00000000000000000000000A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				00000000000000000000001E /* SimpleReminder/Domain.swift in Sources */,
+				00000000000000000000001F /* SimpleReminder/ReminderStore.swift in Sources */,
+				000000000000000000000020 /* SimpleReminder/SimpleReminderApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		000000000000000000000006 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		00000000000000000000000C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = V9H33S35H8;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SimpleReminder/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "リマインダー";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ryosuke.SimpleReminder;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		000000000000000000000010 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = iphoneos;
+			};
+			name = Release;
+		};
+		000000000000000000000011 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = V9H33S35H8;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SimpleReminder/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "リマインダー";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ryosuke.SimpleReminder;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		000000000000000000000002 /* Build configuration list for PBXProject "SimpleReminder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000006 /* Debug */,
+				000000000000000000000010 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000009 /* Build configuration list for PBXNativeTarget "SimpleReminder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00000000000000000000000C /* Debug */,
+				000000000000000000000011 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 000000000000000000000001 /* Project object */;
+}
