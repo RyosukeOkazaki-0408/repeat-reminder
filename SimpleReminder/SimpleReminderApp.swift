@@ -45,6 +45,9 @@ struct RootView: View {
             }
         }
         .onChange(of: phase) { _, phase in if phase == .active { Task { await store.recover() } } }
+        .onChange(of: store.pending?.id, initial: true) { _, id in
+            if id != nil { showingTheme = false }
+        }
     }
     private func updateAppIcon(for theme: ReminderTheme) {
         let iconName: String? = switch theme {
@@ -140,6 +143,7 @@ struct ReminderList: View {
                         Button { edit(reminder) } label: {
                             HStack(spacing: 14) {
                                 Image(systemName: "bell").font(.title2)
+                                    .accessibilityHidden(true)
                                 VStack(alignment: .leading, spacing: 5) {
                                     Text(reminder.title).font(.headline).foregroundStyle(.primary)
                                     Text("\(reminder.repeatText) \(reminder.timeText)").font(.subheadline).foregroundStyle(.secondary)
@@ -151,11 +155,15 @@ struct ReminderList: View {
                             .labelsHidden().disabled(store.busy).accessibilityLabel("\(reminder.title)を有効にする")
                     }.padding(.vertical, 12)
                     .listRowBackground(Color.white.opacity(0.78)).listRowSeparator(.hidden)
+                    .moveDisabled(store.busy || store.fatalLoadError)
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         Button("削除", role: .destructive) {
                             Task { await store.delete(reminder) }
                         }.disabled(store.busy)
                     }
+                }
+                .onMove { source, destination in
+                    store.moveReminders(from: source, to: destination)
                 }
             }
             .scrollContentBackground(.hidden).background { themedBackdrop(store.theme) }
@@ -273,6 +281,7 @@ struct StatisticsView: View {
     let store: ReminderStore
     @Binding var showingTheme: Bool
     @State private var month = Calendar.current.dateInterval(of: .month, for: Date())!.start
+    @State private var selectedDay: HistoryDay?
     private var calendar: Calendar { var c = Calendar(identifier: .gregorian); c.firstWeekday = 1; return c }
     private var currentMonth: Date { calendar.dateInterval(of: .month, for: Date())?.start ?? Date() }
     private var stats: MonthlyStatistics { store.database.statistics(month: month, now: Date(), calendar: calendar) }
@@ -297,7 +306,10 @@ struct StatisticsView: View {
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 12) {
                             ForEach(["日", "月", "火", "水", "木", "金", "土"], id: \.self) { Text($0).font(.caption).foregroundStyle(.secondary) }
                             ForEach(Array(cells.enumerated()), id: \.offset) { _, date in
-                                if let date { dayCell(date) } else { Color.clear.frame(height: 36) }
+                                if let date {
+                                    Button { selectedDay = HistoryDay(date: date) } label: { dayCell(date) }
+                                        .buttonStyle(.plain)
+                                } else { Color.clear.frame(height: 36) }
                             }
                         }
                     }.padding(18).card()
@@ -309,6 +321,14 @@ struct StatisticsView: View {
                 }.padding(20)
             }.background { themedBackdrop(store.theme) }
             .navigationTitle("履歴")
+            .sheet(item: $selectedDay) { day in
+                ReminderHistoryView(date: day.date, store: store)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
+            }
+            .onChange(of: store.pending?.id, initial: true) { _, id in
+                if id != nil { selectedDay = nil }
+            }
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showingTheme = true } label: { Image(systemName: "paintpalette").font(.title2) }.accessibilityLabel("カラーテーマ") } }
         }
     }
@@ -335,13 +355,117 @@ struct StatisticsView: View {
                 Circle().fill(complete ? store.theme.color : Color.gray.opacity(0.17)).frame(width: 25, height: 25)
                 if complete { Image(systemName: "checkmark").font(.caption.bold()).foregroundStyle(.white) }
             }
-        }.accessibilityElement(children: .ignore)
+        }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 6)
+            .background(calendar.isDate(date, inSameDayAs: now) ? store.theme.color.opacity(0.08) : .clear, in: RoundedRectangle(cornerRadius: 10))
+            .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(date.formatted(.dateTime.month().day()))、\(due.filter { $0.completedAt != nil }.count)件完了、\(due.count + futureCount)件予定")
     }
     private func countCard(_ title: String, _ count: Int) -> some View {
         VStack(alignment: .leading, spacing: 6) { Text(title).font(.caption).foregroundStyle(.secondary); Text("\(count)件").font(.title.bold()) }.frame(maxWidth: .infinity, alignment: .leading).padding(18).card()
     }
     private func move(_ offset: Int) { if let value = calendar.date(byAdding: .month, value: offset, to: month), value <= currentMonth { month = value } }
+}
+private struct HistoryDay: Identifiable {
+    let date: Date
+    var id: Date { date }
+}
+
+private struct ReminderHistoryView: View {
+    let date: Date
+    let store: ReminderStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var historyToDelete: Occurrence?
+    private var occurrences: [Occurrence] {
+        let calendar = Calendar(identifier: .gregorian)
+        guard let day = calendar.dateInterval(of: .day, for: date) else { return [] }
+        var database = store.database
+        database.materialize(through: day.end.addingTimeInterval(-1))
+        return database.occurrences.filter { $0.scheduledAt >= day.start && $0.scheduledAt < day.end }
+    }
+    var body: some View {
+        NavigationStack {
+            List {
+                if occurrences.isEmpty {
+                    Text("この日の予定はありません").foregroundStyle(.secondary)
+                }
+                ForEach(occurrences) { occurrence in
+                    let showsDate = occurrence.completedAt.map {
+                        !Calendar.current.isDate($0, inSameDayAs: occurrence.scheduledAt)
+                    } ?? false
+                    HStack(spacing: 14) {
+                        Image(systemName: occurrence.completedAt == nil ? "circle" : "checkmark.circle.fill")
+                            .foregroundStyle(occurrence.completedAt == nil ? Color.secondary : store.theme.color)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(occurrence.title).font(.headline)
+                            Text("予定: \(historyTime(occurrence.scheduledAt, showsDate: showsDate))")
+                                .font(.subheadline).foregroundStyle(.secondary)
+                            if let completedAt = occurrence.completedAt {
+                                Text("完了: \(historyTime(completedAt, showsDate: showsDate))")
+                                    .font(.subheadline).foregroundStyle(.secondary)
+                            } else if occurrence.scheduledAt <= Date() {
+                                Text("未完了")
+                                    .font(.subheadline).foregroundStyle(.secondary)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        Menu {
+                            if occurrence.completedAt != nil {
+                                Button("未完了に戻す", systemImage: "arrow.uturn.backward") {
+                                    Task { await store.markIncomplete(occurrence) }
+                                }
+                            } else {
+                                Button("完了にする", systemImage: "checkmark") {
+                                    Task { await store.complete(occurrence) }
+                                }.disabled(occurrence.scheduledAt > Date())
+                            }
+                            if occurrence.scheduledAt <= Date() {
+                                Divider()
+                                Button("削除する", systemImage: "trash", role: .destructive) {
+                                    historyToDelete = occurrence
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis").frame(width: 44, height: 44).contentShape(Rectangle())
+                        }
+                        .accessibilityLabel("\(occurrence.title)の履歴を変更")
+                        .disabled(store.busy || store.fatalLoadError)
+                    }.padding(.vertical, 6)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        if occurrence.scheduledAt <= Date() {
+                            Button("削除", role: .destructive) {
+                                Task { await store.deleteHistory(occurrence) }
+                            }.disabled(store.busy || store.fatalLoadError)
+                        }
+                    }
+                }
+            }
+            .navigationTitle(date.formatted(.dateTime.month().day()))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("閉じる") { dismiss() }
+                }
+            }
+        }
+        .alert("本当に削除しますか？", isPresented: Binding(get: { historyToDelete != nil }, set: { if !$0 { historyToDelete = nil } }), presenting: historyToDelete) { occurrence in
+            Button("はい", role: .destructive) {
+                historyToDelete = nil
+                Task { await store.deleteHistory(occurrence) }
+            }
+            Button("いいえ", role: .cancel) { historyToDelete = nil }
+        }
+        .alert("確認", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
+            Button("OK") { store.errorMessage = nil }
+        } message: { Text(store.errorMessage ?? "") }
+        .tint(store.theme.color)
+    }
+    private func historyTime(_ date: Date, showsDate: Bool) -> String {
+        if showsDate { return date.formatted(.dateTime.month().day().hour().minute()) }
+        return date.formatted(date: .omitted, time: .shortened)
+    }
 }
 private func themedBackdrop(_ theme: ReminderTheme) -> some View {
     LinearGradient(colors: [Color(.systemBackground), theme.pastel], startPoint: .topLeading, endPoint: .bottomTrailing).ignoresSafeArea()

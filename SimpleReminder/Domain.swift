@@ -77,9 +77,11 @@ struct Occurrence: Codable, Identifiable, Equatable {
     var completedAt: Date?
     var retryAlarmID: UUID?
     var retryAt: Date?
+    var notificationsSuppressed: Bool?
     var hour: Int
     var minute: Int
     var timeText: String { String(format: "%02d:%02d", hour, minute) }
+    var needsAttention: Bool { completedAt == nil && notificationsSuppressed != true }
     init(revision: ScheduleRevision, date: Date) {
         id = Self.identifier(revisionID: revision.id, date: date)
         revisionID = revision.id; reminderID = revision.reminderID; title = revision.title
@@ -94,17 +96,35 @@ struct ReminderDatabase: Codable, Equatable {
     var occurrences: [Occurrence] = []
     var theme: ReminderTheme = .pink
     var cancellations: Set<UUID> = []
+    var deletedOccurrenceIDs: Set<String>?
     mutating func materialize(through now: Date) {
         var known = Set(occurrences.map(\.id))
         for revision in revisions {
             for date in revision.dates(through: now) {
                 let occurrence = Occurrence(revision: revision, date: date)
-                if known.insert(occurrence.id).inserted { occurrences.append(occurrence) }
+                if deletedOccurrenceIDs?.contains(occurrence.id) != true && known.insert(occurrence.id).inserted { occurrences.append(occurrence) }
             }
         }
         occurrences.sort { $0.scheduledAt == $1.scheduledAt ? $0.id < $1.id : $0.scheduledAt < $1.scheduledAt }
     }
-    var pending: [Occurrence] { occurrences.filter { $0.completedAt == nil } }
+    var pending: [Occurrence] { occurrences.filter(\.needsAttention) }
+    mutating func deleteOccurrence(id: String, now: Date) {
+        guard let occurrence = occurrences.first(where: { $0.id == id }), occurrence.scheduledAt <= now else { return }
+        if let retry = occurrence.retryAlarmID { cancellations.insert(retry) }
+        var deleted = deletedOccurrenceIDs ?? []
+        deleted.insert(id)
+        deletedOccurrenceIDs = deleted
+        occurrences.removeAll { $0.id == id }
+    }
+    mutating func markIncomplete(id: String, now: Date) {
+        guard let index = occurrences.firstIndex(where: { $0.id == id }),
+              occurrences[index].completedAt != nil, occurrences[index].scheduledAt <= now else { return }
+        if let retry = occurrences[index].retryAlarmID { cancellations.insert(retry) }
+        occurrences[index].completedAt = nil
+        occurrences[index].notificationsSuppressed = true
+        occurrences[index].retryAlarmID = nil
+        occurrences[index].retryAt = nil
+    }
     func statistics(month: Date, now: Date, calendar: Calendar = .current) -> MonthlyStatistics {
         guard let range = calendar.dateInterval(of: .month, for: month) else { return .init(scheduled: 0, completed: 0, lifetimeCompleted: 0) }
         let due = occurrences.filter { $0.scheduledAt <= now && $0.scheduledAt >= range.start && $0.scheduledAt < range.end }

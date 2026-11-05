@@ -207,6 +207,14 @@ final class ReminderStore {
         var value = database; value.theme = theme
         do { try commit(value) } catch { report(error) }
     }
+    func moveReminders(from source: IndexSet, to destination: Int) {
+        guard !busy, !fatalLoadError else { return }
+        var ordered = reminders
+        ordered.move(fromOffsets: source, toOffset: destination)
+        var value = database
+        value.reminders = ordered + database.reminders.filter { $0.deleted }
+        do { try commit(value) } catch { report(error) }
+    }
     private func cancelIfPresent(_ id: UUID) throws {
         guard try AlarmManager.shared.alarms.contains(where: { $0.id == id }) else { return }
         do { try AlarmManager.shared.cancel(id: id) }
@@ -233,7 +241,8 @@ final class ReminderStore {
             try await acquire(); defer { busy = false }
             var value = database
             value.materialize(through: Date())
-            guard let index = value.occurrences.firstIndex(where: { $0.id == occurrence.id }), value.occurrences[index].completedAt == nil else { return }
+            guard let index = value.occurrences.firstIndex(where: { $0.id == occurrence.id }),
+                  value.occurrences[index].scheduledAt <= Date(), value.occurrences[index].completedAt == nil else { return }
             value.occurrences[index].completedAt = Date()
             if let retry = value.occurrences[index].retryAlarmID { value.cancellations.insert(retry) }
             value.occurrences[index].retryAlarmID = nil; value.occurrences[index].retryAt = nil
@@ -254,6 +263,35 @@ final class ReminderStore {
             }
         } catch { report(StoreError.message("完了できませんでした。もう一度お試しください。\n\(error.localizedDescription)")) }
     }
+    func markIncomplete(_ occurrence: Occurrence) async {
+        do {
+            try await acquire(); defer { busy = false }
+            var value = database
+            value.markIncomplete(id: occurrence.id, now: Date())
+            try commit(value)
+            cancelQueued()
+        } catch { report(error) }
+    }
+    func deleteHistory(_ occurrence: Occurrence) async {
+        do {
+            try await acquire(); defer { busy = false }
+            let now = Date()
+            var value = database
+            value.materialize(through: now)
+            guard let stored = value.occurrences.first(where: { $0.id == occurrence.id }), stored.scheduledAt <= now else { return }
+            let isLatest = value.occurrences.last(where: { $0.revisionID == stored.revisionID && $0.scheduledAt <= now })?.id == stored.id
+            value.deleteOccurrence(id: stored.id, now: now)
+            if value.revisions.contains(where: { $0.id == stored.revisionID && $0.oneShotDate != nil }) {
+                value.cancellations.insert(stored.revisionID)
+            }
+            try commit(value)
+            cancelQueued()
+            if isLatest && stored.needsAttention,
+               let alarm = try AlarmManager.shared.alarms.first(where: { $0.id == stored.revisionID && $0.state == .alerting }) {
+                try AlarmManager.shared.stop(id: alarm.id)
+            }
+        } catch { report(error) }
+    }
     func stopped(alarmID: String, revisionID: String, occurrenceID: String) async throws {
         do {
             try await acquire(); defer { busy = false }
@@ -262,9 +300,15 @@ final class ReminderStore {
             var value = database; value.materialize(through: Date())
             let index: Int?
             if occurrenceID.isEmpty {
+                if let revision = value.revisions.first(where: { $0.id == revisionUUID }),
+                   let latest = revision.dates(through: Date()).last,
+                   value.deletedOccurrenceIDs?.contains(Occurrence.identifier(revisionID: revisionUUID, date: latest)) == true {
+                    try commit(value)
+                    return
+                }
                 index = value.occurrences.lastIndex(where: { $0.revisionID == revisionUUID })
             } else { index = value.occurrences.firstIndex(where: { $0.id == occurrenceID }) }
-            guard let index, value.occurrences[index].completedAt == nil else { try commit(value); return }
+            guard let index, value.occurrences[index].needsAttention else { try commit(value); return }
             if occurrenceID.isEmpty {
                 guard value.occurrences[index].retryAlarmID == nil else { return }
             } else {

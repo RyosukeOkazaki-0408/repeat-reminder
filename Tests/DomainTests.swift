@@ -89,6 +89,54 @@ struct DomainTests {
         late.occurrences[0].retryAt = date("2026-11-02T00:03:00")
         let restored = try JSONDecoder().decode(ReminderDatabase.self, from: JSONEncoder().encode(late))
         expect(restored == late, "persistence roundtrip preserves history, theme, and retry state")
-        print("PASS: labels, weekly/one-shot scheduling, due boundaries, occurrence counts, idempotence, pending order, disable/edit/delete history, late completion, empty statistics, JSON roundtrip")
+        let completedID = late.occurrences[0].id
+        let retryID = late.occurrences[0].retryAlarmID!
+        late.markIncomplete(id: completedID, now: date("2026-11-03T00:00:00"))
+        let revised = late.statistics(month: date("2026-10-01T00:00:00"), now: date("2026-11-03T00:00:00"), calendar: calendar)
+        expect(revised.scheduled == 1 && revised.completed == 0 && revised.lifetimeCompleted == 0 && revised.percentage == 0, "undo completion changes counts and rate, not scheduled denominator")
+        expect(late.pending.isEmpty && !late.occurrences[0].needsAttention, "historical incomplete must not show completion prompt or restart notifications")
+        expect(late.occurrences[0].retryAt == nil && late.occurrences[0].retryAlarmID == nil && late.cancellations.contains(retryID), "historical correction clears retries and queues cancellation")
+        late.materialize(through: date("2026-11-04T00:00:00"))
+        let corrected = try JSONDecoder().decode(ReminderDatabase.self, from: JSONEncoder().encode(late))
+        expect(corrected.pending.isEmpty && corrected.occurrences[0].completedAt == nil, "suppression survives restart and materialization")
+        var repeating = ReminderDatabase()
+        repeating.revisions = [daily]
+        repeating.materialize(through: date("2026-11-01T20:00:00"))
+        repeating.occurrences[0].completedAt = date("2026-11-01T20:01:00")
+        repeating.markIncomplete(id: repeating.occurrences[0].id, now: date("2026-11-01T21:00:00"))
+        repeating.materialize(through: date("2026-11-02T20:00:00"))
+        expect(repeating.revisions == [daily] && repeating.pending.map(\.scheduledAt) == [date("2026-11-02T20:00:00")], "correction suppresses only the old occurrence and preserves the next recurring reminder")
+        late.occurrences[0].completedAt = date("2026-11-04T00:00:00")
+        let completedAgain = late.statistics(month: date("2026-10-01T00:00:00"), now: date("2026-11-04T00:00:00"), calendar: calendar)
+        expect(completedAgain.completed == 1 && completedAgain.lifetimeCompleted == 1 && completedAgain.percentage == 100, "completion can be restored without double counting")
+        let legacyData = try JSONSerialization.jsonObject(with: JSONEncoder().encode(original)) as! [String: Any]
+        var legacy = legacyData
+        legacy["occurrences"] = (legacyData["occurrences"] as! [[String: Any]]).map { item in
+            var value = item
+            value.removeValue(forKey: "notificationsSuppressed")
+            return value
+        }
+        let legacyRestored = try JSONDecoder().decode(ReminderDatabase.self, from: JSONSerialization.data(withJSONObject: legacy))
+        expect(legacyRestored.pending.count == original.pending.count, "legacy data without suppression keeps existing pending behavior")
+        var future = ReminderDatabase()
+        future.occurrences = [Occurrence(revision: oneShotToday, date: date("2026-11-01T20:00:00"))]
+        future.occurrences[0].completedAt = date("2026-11-01T18:00:00")
+        let beforeFutureUndo = future
+        future.markIncomplete(id: future.occurrences[0].id, now: date("2026-11-01T19:00:00"))
+        expect(future == beforeFutureUndo, "future history changes are not supported by the past-only correction")
+        var deletedHistory = repeating
+        let removedID = deletedHistory.occurrences[0].id
+        let removedRetry = UUID()
+        deletedHistory.occurrences[0].retryAlarmID = removedRetry
+        deletedHistory.deleteOccurrence(id: removedID, now: date("2026-11-02T21:00:00"))
+        deletedHistory.materialize(through: date("2026-11-02T21:00:00"))
+        expect(deletedHistory.occurrences.count == 1 && !deletedHistory.occurrences.contains(where: { $0.id == removedID }), "deleted history does not reappear during materialization")
+        expect(deletedHistory.cancellations.contains(removedRetry) && deletedHistory.revisions == repeating.revisions, "history deletion cancels retries and preserves recurring schedule")
+        let deletionStats = deletedHistory.statistics(month: now, now: date("2026-11-02T21:00:00"), calendar: calendar)
+        expect(deletionStats.scheduled == 1 && deletionStats.completed == 0, "deleted history is excluded from statistics")
+        var deletedRestored = try JSONDecoder().decode(ReminderDatabase.self, from: JSONEncoder().encode(deletedHistory))
+        deletedRestored.materialize(through: date("2026-11-03T21:00:00"))
+        expect(deletedRestored.occurrences.count == 2 && !deletedRestored.occurrences.contains(where: { $0.id == removedID }), "deletion survives restart without suppressing future occurrences")
+        print("PASS: scheduling, statistics, history corrections and deletion, notification suppression, recurrence preservation, legacy decoding, JSON roundtrip")
     }
 }

@@ -1,5 +1,15 @@
 # 検証記録
 
+## 2026-11-05 履歴・並べ替えの追加変更
+
+- `Tests/DomainTests.swift` 成功。履歴の完了取消・再完了・削除による集計更新、再通知抑制、旧形式の読み込み、JSON復元後の削除維持、次回の繰り返し予定の維持を確認。
+- iOS 26.4シミュレーター内で `Tests/ReminderStoreChecks.swift` を実行し、実際のReminderStoreによる並び順の保存、完了状態の変更、履歴削除、再生成したStoreからの復元、古い停止Intentから再通知が復活しないことを確認。予定時刻前の完了操作が保存データを変更しないことも確認。
+- 完了済み履歴の削除時に不要なAlarmKit問い合わせが発生する箇所を修正。
+- 実機向けReleaseビルドを署名なしで確認。
+- 画面操作ツールが `Computer Use permissions are not granted` を返すため、長押しドラッグ、スワイプ、3点メニュー・削除確認、発報時のシート終了のUI操作は未確認。今回のビルドを使った実機での発報・音声・再通知も未確認。
+
+ストアの統合テストは、`SimpleReminder/Domain.swift`、`SimpleReminder/ReminderStore.swift`、`Tests/ReminderStoreChecks.swift` をiOS Simulator向けにコンパイルし、`simctl spawn` で個別に実行する。専用の一時ファイルを使い、既存のアプリデータは変更しない。
+
 ## 実行済み
 
 2026-11-03:
