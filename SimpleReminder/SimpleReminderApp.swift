@@ -195,6 +195,13 @@ struct ReminderEditor: View {
                     DatePicker(selection: date, displayedComponents: .hourAndMinute) { Label("通知時刻", systemImage: "clock") }
                 }
                 Section {
+                    Picker("再通知の間隔", selection: Binding(get: { reminder.retryMinutes ?? 3 }, set: { reminder.retryMinutes = $0 })) {
+                        ForEach([1, 3, 5, 10, 15, 30], id: \.self) { minutes in
+                            Text("\(minutes)分").tag(minutes)
+                        }
+                    }
+                }
+                Section {
                     HStack { Label("繰り返し", systemImage: "calendar"); Spacer(); Text(reminder.repeatText).foregroundStyle(.secondary) }
                     HStack(spacing: 8) {
                         ForEach([1, 2, 3, 4, 5, 6, 7], id: \.self) { day in

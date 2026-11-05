@@ -13,6 +13,7 @@ struct Reminder: Codable, Identifiable, Equatable {
     var hour: Int
     var minute: Int
     var weekdays: Set<Int>
+    var retryMinutes: Int? = nil
     var enabled = true
     var deleted = false
     var timeText: String { String(format: "%02d:%02d", hour, minute) }

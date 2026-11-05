@@ -272,7 +272,8 @@ final class ReminderStore {
             }
             if let prior = value.occurrences[index].retryAlarmID { value.cancellations.insert(prior) }
             value.occurrences[index].retryAlarmID = UUID()
-            value.occurrences[index].retryAt = Date().addingTimeInterval(180)
+            let minutes = value.reminders.first(where: { $0.id == value.occurrences[index].reminderID })?.retryMinutes ?? 3
+            value.occurrences[index].retryAt = Date().addingTimeInterval(TimeInterval(minutes * 60))
             try commit(value) // Persist intent first, so a terminated process can recover registration.
             try await registerRetry(value.occurrences[index])
             cancelQueued()
