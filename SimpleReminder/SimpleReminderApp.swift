@@ -71,7 +71,7 @@ struct RootView: View {
                         ReminderList(store: store, edit: { draft = $0 })
                             .tabItem { Label("リマインダー", systemImage: "bell.fill") }
                         StatisticsView(store: store, showingTheme: $showingTheme)
-                            .tabItem { Label("統計", systemImage: "chart.bar.fill") }
+                            .tabItem { Label("履歴", systemImage: "chart.bar.fill") }
                     }
                 }
             }
@@ -131,8 +131,8 @@ struct ReminderList: View {
                 if store.reminders.isEmpty {
                     VStack(spacing: 12) {
                         Image(systemName: "bell").font(.system(size: 38)).foregroundStyle(store.theme.color)
-                        Text("リマインダーを追加").font(.headline)
-                        Text("右上の＋から予定を設定できます").font(.subheadline).foregroundStyle(.secondary)
+                        Text("リマインダーがありません").font(.headline)
+                        Text("右上の＋から予定を追加できます").font(.subheadline).foregroundStyle(.secondary)
                     }.frame(maxWidth: .infinity).padding(.vertical, 50).listRowBackground(Color.clear).listRowSeparator(.hidden)
                 }
                 ForEach(store.reminders) { reminder in
@@ -217,7 +217,7 @@ struct ReminderEditor: View {
                                 .accessibilityAddTraits(selected ? .isSelected : [])
                         }
                     }.padding(.vertical, 4)
-                } footer: { if reminder.weekdays.isEmpty { Text("次に到来する設定時刻に、一度だけ通知します。") } }
+                }
                 if isExisting {
                     Section {
                         Button("削除する", role: .destructive) {
@@ -273,12 +273,12 @@ struct StatisticsView: View {
     let store: ReminderStore
     @Binding var showingTheme: Bool
     @State private var month = Calendar.current.dateInterval(of: .month, for: Date())!.start
-    private var calendar: Calendar { var c = Calendar(identifier: .gregorian); c.firstWeekday = 2; return c }
+    private var calendar: Calendar { var c = Calendar(identifier: .gregorian); c.firstWeekday = 1; return c }
     private var currentMonth: Date { calendar.dateInterval(of: .month, for: Date())?.start ?? Date() }
     private var stats: MonthlyStatistics { store.database.statistics(month: month, now: Date(), calendar: calendar) }
     private var cells: [Date?] {
         let range = calendar.range(of: .day, in: .month, for: month) ?? 1..<1
-        let offset = (calendar.component(.weekday, from: month) + 5) % 7
+        let offset = calendar.component(.weekday, from: month) - 1
         return Array(repeating: nil, count: offset) + range.map { calendar.date(byAdding: .day, value: $0 - 1, to: month) }
     }
     var body: some View {
@@ -295,7 +295,7 @@ struct StatisticsView: View {
                         }
                         Divider()
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 12) {
-                            ForEach(["月", "火", "水", "木", "金", "土", "日"], id: \.self) { Text($0).font(.caption).foregroundStyle(.secondary) }
+                            ForEach(["日", "月", "火", "水", "木", "金", "土"], id: \.self) { Text($0).font(.caption).foregroundStyle(.secondary) }
                             ForEach(Array(cells.enumerated()), id: \.offset) { _, date in
                                 if let date { dayCell(date) } else { Color.clear.frame(height: 36) }
                             }
@@ -308,7 +308,7 @@ struct StatisticsView: View {
                     }
                 }.padding(20)
             }.background { themedBackdrop(store.theme) }
-            .navigationTitle("統計")
+            .navigationTitle("履歴")
             .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { showingTheme = true } label: { Image(systemName: "paintpalette").font(.title2) }.accessibilityLabel("カラーテーマ") } }
         }
     }
