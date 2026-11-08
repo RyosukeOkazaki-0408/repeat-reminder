@@ -74,7 +74,7 @@ struct RootView: View {
                         ReminderList(store: store, edit: { draft = $0 })
                             .tabItem { Label("リマインダー", systemImage: "bell.fill") }
                         StatisticsView(store: store, showingTheme: $showingTheme)
-                            .tabItem { Label("履歴", systemImage: "chart.bar.fill") }
+                            .tabItem { Label("カレンダー", systemImage: "calendar") }
                     }
                 }
             }
@@ -320,7 +320,7 @@ struct StatisticsView: View {
                     }
                 }.padding(20)
             }.background { themedBackdrop(store.theme) }
-            .navigationTitle("履歴")
+            .navigationTitle("カレンダー")
             .sheet(item: $selectedDay) { day in
                 ReminderHistoryView(date: day.date, store: store)
                     .presentationDetents([.medium, .large])
